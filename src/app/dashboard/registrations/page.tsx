@@ -1,5 +1,5 @@
 
-import { getRegistrations, markRegistrationsAsRead } from '@/lib/actions';
+import { getRegistrations } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
   Table,
@@ -22,7 +22,6 @@ function formatDateTime(isoString: string) {
 
 export default async function RegistrationsPage() {
   const registrations = await getRegistrations();
-  await markRegistrationsAsRead();
 
   return (
       <div className="space-y-8">

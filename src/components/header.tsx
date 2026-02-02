@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Home, LogOut, PanelLeft, User, UserCog, FileUp, Users, Settings, UserPlus, MessageSquare, Landmark, UserCheck } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -24,7 +24,7 @@ const dashboardNavItems = [
 
 
 export function Header() {
-  const { role, logout, isAuthReady } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,7 +44,7 @@ export function Header() {
   
   const MobileNav = () => {
     // Show only on dashboard pages for logged in owners
-    if (role !== 'Owner' || !pathname.startsWith('/dashboard')) return null;
+    if (!user || user.role !== 'Owner' || !pathname.startsWith('/dashboard')) return null;
 
     return (
         <Sheet>
@@ -85,12 +85,12 @@ export function Header() {
   };
 
   const AuthButtons = () => {
-    if (!isAuthReady) return <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
+    if (isLoading) return <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
     
-    if (role) {
+    if (user) {
       return (
         <div className="flex items-center gap-2">
-            {role === 'Owner' && (
+            {user.role === 'Owner' && (
               <Button asChild variant="ghost" className="hidden sm:inline-flex">
                   <Link href="/dashboard">
                     <UserCog className="mr-2 h-4 w-4" />

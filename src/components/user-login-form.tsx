@@ -7,10 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { KeyRound, Mail } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuth } from '@/lib/auth-context';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { verifyUserCredentials } from '@/lib/actions';
 
 export default function UserLoginForm() {
   const router = useRouter();
@@ -23,10 +22,10 @@ export default function UserLoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const result = await verifyUserCredentials(email, password);
+    // Use the login function from auth context which handles email/password properly
+    const success = await login(email, password);
 
-    if (result.success && result.role) {
-       login(result.role);
+    if (success) {
        router.push('/plots');
        toast({
         title: 'Login Successful',
@@ -36,7 +35,7 @@ export default function UserLoginForm() {
        toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: result.message || 'Invalid email or password. Please try again.',
+        description: 'Invalid email or password. Please try again.',
       });
     }
   };

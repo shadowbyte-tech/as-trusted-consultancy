@@ -1,0 +1,38 @@
+[
+  {
+    "id": "reg-1",
+    "name": "Arjun Mehra",
+    "phone": "+91 99887 76655",
+    "email": "arjun.m@example.com",
+    "createdAt": "2026-02-02T14:32:40.154Z",
+    "notes": "Interested in investment properties.",
+    "isNew": true
+  },
+  {
+    "id": "reg-2",
+    "name": "Sneha Patel",
+    "phone": "+91 88776 65544",
+    "email": "sneha.p@example.com",
+    "createdAt": "2026-02-03T14:32:40.154Z",
+    "notes": "First-time home buyer, needs guidance on the process.",
+    "isNew": true
+  },
+  {
+    "id": "reg-1770215645865",
+    "createdAt": "2026-02-04T14:34:05.865Z",
+    "name": "Sukka Manikantagoud",
+    "phone": "08008990902",
+    "email": "sukkamanikantagoud@gmail.com",
+    "notes": "",
+    "isNew": true
+  },
+  {
+    "id": "reg-1770215967002",
+    "createdAt": "2026-02-04T14:39:27.003Z",
+    "name": "Sukka Manikantagoud",
+    "phone": "09666116088",
+    "email": "sukkamanikantagoud66@gmail.com",
+    "notes": "",
+    "isNew": true
+  }
+]

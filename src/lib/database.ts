@@ -13,6 +13,7 @@ import type { Plot, User, Inquiry, Contact, Registration } from './definitions';
 
 const plotDataPath = path.join(process.cwd(), 'src', 'lib', 'plot-data.json');
 const inquiryDataPath = path.join(process.cwd(), 'src', 'lib', 'inquiry-data.json');
+const registrationDataPath = path.join(process.cwd(), 'src', 'lib', 'registration-data.json');
 
 export async function readPlots(): Promise<Plot[]> {
   try {
@@ -77,3 +78,26 @@ export const registrations: Registration[] = [
     { id: 'reg-1', name: 'Arjun Mehra', phone: '+91 99887 76655', email: 'arjun.m@example.com', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), notes: 'Interested in investment properties.', isNew: true },
     { id: 'reg-2', name: 'Sneha Patel', phone: '+91 88776 65544', email: 'sneha.p@example.com', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), notes: 'First-time home buyer, needs guidance on the process.', isNew: true },
 ];
+
+export async function readRegistrations(): Promise<Registration[]> {
+  try {
+    const fileContent = await fs.readFile(registrationDataPath, 'utf-8');
+    const registrations = JSON.parse(fileContent);
+    return registrations as Registration[];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // If file doesn't exist, return the default registrations
+      return registrations;
+    }
+    console.error('Failed to read registration data:', error);
+    return registrations;
+  }
+}
+
+export async function writeRegistrations(registrations: Registration[]): Promise<void> {
+  try {
+    await fs.writeFile(registrationDataPath, JSON.stringify(registrations, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Failed to write registration data:', error);
+  }
+}

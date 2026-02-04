@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { Plot, User, Inquiry, Contact, Registration, State } from './definitions';
-import { users, contacts, registrations, readPlots, writePlots, readInquiries, writeInquiries } from './database';
+import { users, contacts, registrations, readPlots, writePlots, readInquiries, writeInquiries, readRegistrations, writeRegistrations } from './database';
 
 // DATA ACCESS FUNCTIONS
 export async function getPlots() {
@@ -36,6 +36,7 @@ export async function getContactById(id: string) {
 }
 
 export async function getRegistrations() {
+    const registrations = await readRegistrations();
     return [...registrations].reverse();
 }
 
@@ -194,15 +195,35 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
   };
 }
 
-export async function deletePlot(id: string) {
-  let plots = await readPlots();
-  const plotIndex = plots.findIndex((plot) => plot.id === id);
-  if (plotIndex > -1) {
-      plots.splice(plotIndex, 1);
-      await writePlots(plots);
+export async function deletePlot(id: string): Promise<{ success: boolean; message: string }> {
+  try {
+    let plots = await readPlots();
+    const plotIndex = plots.findIndex((plot) => plot.id === id);
+    
+    if (plotIndex === -1) {
+      return {
+        success: false,
+        message: 'Plot not found.'
+      };
+    }
+
+    plots.splice(plotIndex, 1);
+    await writePlots(plots);
+    
+    revalidatePath('/dashboard');
+    revalidatePath('/plots');
+    
+    return {
+      success: true,
+      message: 'Plot deleted successfully.'
+    };
+  } catch (error) {
+    console.error('Failed to delete plot:', error);
+    return {
+      success: false,
+      message: 'Failed to delete plot. Please try again.'
+    };
   }
-  revalidatePath('/dashboard');
-  revalidatePath('/plots');
 }
 
 // USER MANAGEMENT ACTIONS
@@ -443,7 +464,8 @@ export async function createRegistration(prevState: State, formData: FormData): 
   }
   
   const { email } = validatedFields.data;
-  const existingRegistration = registrations.find(r => r.email.toLowerCase() === email.toLowerCase());
+  const currentRegistrations = await readRegistrations();
+  const existingRegistration = currentRegistrations.find(r => r.email.toLowerCase() === email.toLowerCase());
   if (existingRegistration) {
     return {
       success: false,
@@ -458,7 +480,8 @@ export async function createRegistration(prevState: State, formData: FormData): 
     isNew: true, // Mark as a new registration
   };
 
-  registrations.push(newRegistration);
+  currentRegistrations.push(newRegistration);
+  await writeRegistrations(currentRegistrations);
   revalidatePath('/dashboard/registrations');
   revalidatePath('/dashboard', 'layout'); // Revalidate layout to update notification count
 

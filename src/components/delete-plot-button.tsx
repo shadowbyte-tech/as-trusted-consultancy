@@ -21,11 +21,22 @@ export default function DeletePlotButton({ plotId, trigger }: { plotId: string; 
   const { toast } = useToast();
 
   const handleDelete = async () => {
-    await deletePlot(plotId);
-    toast({
-      title: 'Success!',
-      description: 'The plot has been deleted.',
-    });
+    const result = await deletePlot(plotId);
+    
+    if (result.success) {
+      toast({
+        title: 'Success!',
+        description: result.message,
+      });
+      // Optional: redirect or refresh the page
+      window.location.reload();
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error!',
+        description: result.message,
+      });
+    }
   };
 
   const triggerElement = trigger === 'menuitem' ? (

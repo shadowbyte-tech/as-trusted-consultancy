@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { registerUser, generateToken } from '@/lib/auth';
+import { handleError, ValidationError } from '@/lib/errors';
+import { API_MESSAGES, VALIDATION } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, role } = await request.json();
+    const body = await request.json();
+    const { email, password, name, role } = body;
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: API_MESSAGES.ERROR.MISSING_FIELDS, fields: ['email', 'password'] },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < VALIDATION.PASSWORD_MIN_LENGTH) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
+        { error: `Password must be at least ${VALIDATION.PASSWORD_MIN_LENGTH} characters long` },
         { status: 400 }
       );
     }
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     
     if (!user) {
       return NextResponse.json(
-        { error: 'User already exists' },
+        { error: API_MESSAGES.ERROR.USER_EXISTS },
         { status: 409 }
       );
     }
@@ -31,14 +34,15 @@ export async function POST(request: NextRequest) {
     const token = generateToken(user);
 
     return NextResponse.json({
+      success: true,
       user,
       token,
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    const { message, statusCode } = handleError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: message },
+      { status: statusCode }
     );
   }
 }

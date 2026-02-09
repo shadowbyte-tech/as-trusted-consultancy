@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, generateToken } from '@/lib/auth';
-
+import { handleError } from '@/lib/errors';
+import { API_MESSAGES } from '@/lib/constants';
+3
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: API_MESSAGES.ERROR.MISSING_FIELDS, fields: ['email', 'password'] },
         { status: 400 }
       );
     }
@@ -16,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: API_MESSAGES.ERROR.INVALID_CREDENTIALS },
         { status: 401 }
       );
     }
@@ -24,14 +27,15 @@ export async function POST(request: NextRequest) {
     const token = generateToken(user);
 
     return NextResponse.json({
+      success: true,
       user,
       token,
     });
   } catch (error) {
-    console.error('Login error:', error);
+    const { message, statusCode } = handleError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: message },
+      { status: statusCode }
     );
   }
 }

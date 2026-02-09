@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser, changePassword } from '@/lib/auth';
+import { handleError } from '@/lib/errors';
+import { API_MESSAGES, VALIDATION } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,44 +9,39 @@ export async function POST(request: NextRequest) {
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: API_MESSAGES.ERROR.UNAUTHORIZED },
         { status: 401 }
       );
     }
 
-    const { currentPassword, newPassword } = await request.json();
+    const body = await request.json();
+    const { currentPassword, newPassword } = body;
 
     if (!currentPassword || !newPassword) {
       return NextResponse.json(
-        { error: 'Current password and new password are required' },
+        { error: API_MESSAGES.ERROR.MISSING_FIELDS, fields: ['currentPassword', 'newPassword'] },
         { status: 400 }
       );
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < VALIDATION.PASSWORD_MIN_LENGTH) {
       return NextResponse.json(
-        { error: 'New password must be at least 6 characters long' },
+        { error: `New password must be at least ${VALIDATION.PASSWORD_MIN_LENGTH} characters long` },
         { status: 400 }
       );
     }
 
-    const success = await changePassword(user.id, currentPassword, newPassword);
-    
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 400 }
-      );
-    }
+    await changePassword(user.id, currentPassword, newPassword);
 
     return NextResponse.json({
-      message: 'Password changed successfully',
+      success: true,
+      message: API_MESSAGES.SUCCESS.PASSWORD_CHANGED,
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    const { message, statusCode } = handleError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: message },
+      { status: statusCode }
     );
   }
 }

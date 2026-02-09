@@ -63,8 +63,9 @@ export default function LoginForm() {
     }
   }
 
-  const handlePasswordReset = (e: React.FormEvent) => {
+  const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (newPassword !== confirmPassword) {
         toast({
             title: 'Passwords Mismatch',
@@ -73,22 +74,57 @@ export default function LoginForm() {
         });
         return;
     }
-    if (newPassword.length < 6) {
+    
+    if (newPassword.length < 8) {
         toast({
             title: 'Password Too Short',
-            description: 'Your new password must be at least 6 characters long.',
+            description: 'Your new password must be at least 8 characters long.',
             variant: 'destructive',
         });
         return;
     }
-    // In a real app, this would call an action to update the password
-    console.log('Password reset successfully (simulated). New password:', newPassword);
-    toast({
-        title: 'Password Reset!',
-        description: 'Your password has been successfully changed. Please log in with your new password.',
-    });
-    
-    setView('manual');
+
+    try {
+        const response = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                securityAnswer: securityAnswer,
+                newPassword: newPassword,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            toast({
+                title: 'Password Reset!',
+                description: 'Your password has been successfully changed. Please log in with your new password.',
+            });
+            
+            // Clear form and return to login
+            setNewPassword('');
+            setConfirmPassword('');
+            setSecurityAnswer('');
+            setView('manual');
+        } else {
+            toast({
+                title: 'Reset Failed',
+                description: data.error || 'Failed to reset password. Please try again.',
+                variant: 'destructive',
+            });
+        }
+    } catch (error) {
+        console.error('Password reset error:', error);
+        toast({
+            title: 'Error',
+            description: 'An error occurred while resetting your password. Please try again.',
+            variant: 'destructive',
+        });
+    }
   }
 
   const renderContent = () => {

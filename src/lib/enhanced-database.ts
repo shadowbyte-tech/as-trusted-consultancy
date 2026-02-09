@@ -29,7 +29,7 @@ export async function readFavorites(): Promise<Favorite[]> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return [];
     }
-    console.error('Failed to read favorites data:', error);
+    console.error(`Failed to read favorites data from ${favoritesDataPath}:`, error);
     return [];
   }
 }
@@ -43,7 +43,8 @@ export async function writeFavorites(favorites: Favorite[]): Promise<void> {
   try {
     await fs.writeFile(favoritesDataPath, JSON.stringify(favorites, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Failed to write favorites data:', error);
+    console.error(`Failed to write favorites data to ${favoritesDataPath}:`, error);
+    throw error;
   }
 }
 
@@ -59,7 +60,7 @@ export async function readComparisons(): Promise<Comparison[]> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return [];
     }
-    console.error('Failed to read comparisons data:', error);
+    console.error(`Failed to read comparisons data from ${comparisonsDataPath}:`, error);
     return [];
   }
 }
@@ -73,7 +74,8 @@ export async function writeComparisons(comparisons: Comparison[]): Promise<void>
   try {
     await fs.writeFile(comparisonsDataPath, JSON.stringify(comparisons, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Failed to write comparisons data:', error);
+    console.error(`Failed to write comparisons data to ${comparisonsDataPath}:`, error);
+    throw error;
   }
 }
 
@@ -89,7 +91,7 @@ export async function readSearchHistory(): Promise<SearchHistory[]> {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return [];
     }
-    console.error('Failed to read search history data:', error);
+    console.error(`Failed to read search history data from ${searchHistoryDataPath}:`, error);
     return [];
   }
 }
@@ -103,6 +105,7 @@ export async function writeSearchHistory(history: SearchHistory[]): Promise<void
   try {
     await fs.writeFile(searchHistoryDataPath, JSON.stringify(history, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Failed to write search history data:', error);
+    console.error(`Failed to write search history data to ${searchHistoryDataPath}:`, error);
+    throw error;
   }
 }

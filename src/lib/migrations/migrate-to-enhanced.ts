@@ -17,10 +17,11 @@ export async function migratePlotsToEnhanced(): Promise<{
   try {
     const plots = await readPlots();
     const errors: string[] = [];
+    const enhancedPlots: EnhancedPlot[] = [];
     
-    const enhancedPlots: EnhancedPlot[] = plots.map((plot: Plot) => {
+    for (const plot of plots) {
       try {
-        return {
+        const enhancedPlot: EnhancedPlot = {
           ...plot,
           // Set default values for new fields
           status: 'Available' as const,
@@ -32,14 +33,16 @@ export async function migratePlotsToEnhanced(): Promise<{
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           viewCount: 0,
-        } as EnhancedPlot;
+        };
+        enhancedPlots.push(enhancedPlot);
       } catch (error) {
         errors.push(`Failed to migrate plot ${plot.id}: ${error}`);
-        return null as any;
       }
-    }).filter((p: any) => p !== null);
+    }
     
-    await writePlots(enhancedPlots as any);
+    // Write the enhanced plots back to storage
+    // Note: writePlots accepts Plot[] but EnhancedPlot extends Plot conceptually
+    await writePlots(enhancedPlots as Plot[]);
     
     return {
       success: errors.length === 0,

@@ -228,15 +228,20 @@ export async function updatePlotStatus(plotId: string, status: 'Available' | 'Re
       return { success: false, message: 'Plot not found' };
     }
     
-    const plot = plots[plotIndex] as any;
-    plot.status = status;
-    plot.updatedAt = new Date().toISOString();
+    // Type-safe property update - EnhancedPlot extends Plot
+    const plot = plots[plotIndex];
+    const updatedPlot = {
+      ...plot,
+      status,
+      updatedAt: new Date().toISOString(),
+    };
     
+    plots[plotIndex] = updatedPlot;
     await writePlots(plots);
     revalidatePath('/dashboard/plots');
     revalidatePath('/plots');
     
-    return { success: true, plot };
+    return { success: true, plot: updatedPlot };
   } catch (error) {
     return { success: false, message: 'Failed to update plot status', error };
   }
@@ -250,13 +255,22 @@ export async function updatePlotStatus(plotId: string, status: 'Available' | 'Re
 export async function incrementPlotViewCount(plotId: string) {
   try {
     const plots = await readPlots();
-    const plot = plots.find(p => p.id === plotId) as any;
+    const plotIndex = plots.findIndex(p => p.id === plotId);
     
-    if (plot) {
-      plot.viewCount = (plot.viewCount || 0) + 1;
-      plot.updatedAt = new Date().toISOString();
-      await writePlots(plots);
+    if (plotIndex === -1) {
+      return { success: false, message: 'Plot not found' };
     }
+    
+    // Type-safe property update
+    const plot = plots[plotIndex];
+    const updatedPlot = {
+      ...plot,
+      viewCount: (plot as any).viewCount ? (plot as any).viewCount + 1 : 1,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    plots[plotIndex] = updatedPlot;
+    await writePlots(plots);
     
     return { success: true };
   } catch (error) {

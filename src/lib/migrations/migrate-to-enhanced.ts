@@ -6,8 +6,7 @@ import type { EnhancedPlot } from '../enhanced-definitions';
 
 /**
  * Migrate existing plots to enhanced schema
- * This is backward compatible - existing data is preserved
- * @returns Promise with migration results
+ * Fully type-safe for strict production builds
  */
 export async function migratePlotsToEnhanced(): Promise<{
   success: boolean;
@@ -15,52 +14,69 @@ export async function migratePlotsToEnhanced(): Promise<{
   errors?: string[];
 }> {
   try {
-    const plots = await readPlots();
+    // 1️⃣ Read legacy plots
+    const legacyPlots: Plot[] = await readPlots();
+
     const errors: string[] = [];
     const enhancedPlots: EnhancedPlot[] = [];
-    
-    for (const plot of plots) {
+
+    // 2️⃣ Convert Plot → EnhancedPlot
+    for (const plot of legacyPlots) {
       try {
         const enhancedPlot: EnhancedPlot = {
           ...plot,
-          // Set default values for new fields
-          status: 'Available' as const,
+
+          // Enhanced-only fields
+          status: 'Available',
           priceNegotiable: true,
-          priceVisibility: 'inquiry' as const,
+          priceVisibility: 'inquiry',
+
           images: plot.imageUrl ? [plot.imageUrl] : [],
-          thumbnailUrl: plot.imageUrl,
+          thumbnailUrl: plot.imageUrl ?? '',
+
           imageHint: plot.imageHint || 'legacy upload',
+
+          viewCount: 0,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          viewCount: 0,
         };
+
         enhancedPlots.push(enhancedPlot);
-      } catch (error) {
-        errors.push(`Failed to migrate plot ${plot.id}: ${error}`);
+      } catch (err) {
+        errors.push(`Failed to migrate plot ${plot.id}: ${String(err)}`);
       }
     }
-    
-    // Write the enhanced plots back to storage
-    // Note: writePlots accepts Plot[] but EnhancedPlot extends Plot conceptually
-    await writePlots(enhancedPlots as Plot[]);
-    
+
+    // 3️⃣ Convert EnhancedPlot → Plot (for writePlots)
+    const migratedPlots: Plot[] = enhancedPlots.map((enhanced) => ({
+      ...enhanced,
+
+      // ✅ Plot requires imageUrl — derive from EnhancedPlot
+      imageUrl: enhanced.thumbnailUrl || '',
+
+      // ✅ Plot requires imageHint — guarantee string
+      imageHint: enhanced.imageHint || 'legacy upload',
+    }));
+
+    // 4️⃣ Persist
+    await writePlots(migratedPlots);
+
     return {
       success: errors.length === 0,
-      migratedCount: enhancedPlots.length,
-      errors: errors.length > 0 ? errors : undefined,
+      migratedCount: migratedPlots.length,
+      errors: errors.length ? errors : undefined,
     };
-  } catch (error) {
+  } catch (err) {
     return {
       success: false,
       migratedCount: 0,
-      errors: [`Migration failed: ${error}`],
+      errors: [`Migration failed: ${String(err)}`],
     };
   }
 }
 
 /**
- * Check if migration is needed
- * @returns Promise with migration status
+ * Check whether migration is required
  */
 export async function checkMigrationStatus(): Promise<{
   needsMigration: boolean;
@@ -68,10 +84,11 @@ export async function checkMigrationStatus(): Promise<{
   enhancedCount: number;
 }> {
   const plots = await readPlots();
-  const enhancedCount = plots.filter((p: any) => 
-    'status' in p && 'images' in p
+
+  const enhancedCount = plots.filter(
+    (p: any) => 'status' in p && 'images' in p
   ).length;
-  
+
   return {
     needsMigration: enhancedCount < plots.length,
     plotCount: plots.length,

@@ -6,9 +6,6 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { Plot, User, Inquiry, Contact, Registration, State } from './definitions';
 import { 
-  users, 
-  contacts, 
-  registrations, 
   readPlots, 
   writePlots, 
   readInquiries, 
@@ -20,7 +17,7 @@ import {
   readUsers,
   writeUsers
 } from './database';
-import { VALIDATION, API_MESSAGES, PLOT_FACINGS } from './constants';
+import { VALIDATION, API_MESSAGES } from './constants';
 import { setPassword } from './password-storage';
 import bcrypt from 'bcryptjs';
 
@@ -125,6 +122,10 @@ const PlotSchema = z.object({
   description: z.string()
     .max(VALIDATION.DESCRIPTION_MAX_LENGTH, { message: `Description must be less than ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters.` })
     .optional(),
+  // New fields
+  price: z.string().optional(),
+  priceNegotiable: z.string().optional(),
+  status: z.enum(['Available', 'Reserved', 'Sold', 'Under Negotiation']).optional(),
 });
 
 const ImageSchema = z.instanceof(File, { message: API_MESSAGES.ERROR.IMAGE_REQUIRED })
@@ -187,11 +188,30 @@ export async function createPlot(prevState: State, formData: FormData): Promise<
 
     const imageUrl = await fileToDataUrl(validatedImage.data);
 
+    // Process price and calculate price per sqft
+    const price = validatedFields.data.price ? parseFloat(validatedFields.data.price) : undefined;
+    const priceNegotiable = validatedFields.data.priceNegotiable === 'true';
+    const status = validatedFields.data.status || 'Available';
+    
+    // Calculate price per sqft if price and size are available
+    let pricePerSqft: number | undefined;
+    if (price && validatedFields.data.plotSize) {
+      const sizeMatch = validatedFields.data.plotSize.match(/(\d+)/);
+      if (sizeMatch) {
+        const size = parseInt(sizeMatch[1]);
+        pricePerSqft = Math.round(price / size);
+      }
+    }
+
     const newPlot: Plot = {
       id: Date.now().toString(),
       ...validatedFields.data,
       imageUrl: imageUrl,
       imageHint: 'custom upload',
+      price,
+      pricePerSqft,
+      priceNegotiable,
+      status: status as any,
     };
 
     const plots = await readPlots();
@@ -241,7 +261,29 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
       return { message: API_MESSAGES.ERROR.PLOT_NOT_FOUND, success: false };
     }
     
-    const updatedPlot = { ...plots[plotIndex], ...validatedFields.data };
+    // Process price and calculate price per sqft
+    const price = validatedFields.data.price ? parseFloat(validatedFields.data.price) : undefined;
+    const priceNegotiable = validatedFields.data.priceNegotiable === 'true';
+    const status = validatedFields.data.status || plots[plotIndex].status || 'Available';
+    
+    // Calculate price per sqft if price and size are available
+    let pricePerSqft: number | undefined;
+    if (price && validatedFields.data.plotSize) {
+      const sizeMatch = validatedFields.data.plotSize.match(/(\d+)/);
+      if (sizeMatch) {
+        const size = parseInt(sizeMatch[1]);
+        pricePerSqft = Math.round(price / size);
+      }
+    }
+    
+    const updatedPlot: Plot = { 
+      ...plots[plotIndex], 
+      ...validatedFields.data,
+      price,
+      pricePerSqft,
+      priceNegotiable,
+      status: status as any,
+    };
     
     const imageFile = formData.get('imageUrl') as File;
     if (imageFile && imageFile.size > 0) {

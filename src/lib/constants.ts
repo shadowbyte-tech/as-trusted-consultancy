@@ -26,6 +26,14 @@ export const PLOT_FACINGS = [
   'South-West',
 ] as const;
 
+// Plot status options
+export const PLOT_STATUS = [
+  'Available',
+  'Reserved',
+  'Sold',
+  'Under Negotiation',
+] as const;
+
 // Validation constants
 export const VALIDATION = {
   PASSWORD_MIN_LENGTH: 8,

@@ -1,4 +1,6 @@
 
+export type PlotStatus = 'Available' | 'Reserved' | 'Sold' | 'Under Negotiation';
+
 export type Plot = {
   id: string;
   plotNumber: string;
@@ -9,6 +11,12 @@ export type Plot = {
   imageUrl: string;
   imageHint: string;
   description?: string;
+  // New fields
+  price?: number;
+  pricePerSqft?: number;
+  priceNegotiable?: boolean;
+  status?: PlotStatus;
+  images?: string[]; // Multiple images
 };
 
 export type PlotFacing = Plot['plotFacing'];

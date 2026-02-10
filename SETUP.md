@@ -46,7 +46,7 @@ The application will be available at `http://localhost:9002`
 #### `GEMINI_API_KEY`
 - **Purpose**: Enables AI features (Vastu analysis, plot descriptions, market insights, etc.)
 - **How to get**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-- **Example**: `AIzaSyA9JDIwiWwfmTMuS_Dn7CiiCWqnBkmW658`
+- **Example**: `AIzaSyCOozivH0cLJJE0l37ZNfA1zxLYRnwJUYw`
 
 #### `JWT_SECRET`
 - **Purpose**: Signs and verifies JWT tokens for authentication

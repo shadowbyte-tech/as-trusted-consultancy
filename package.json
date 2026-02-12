@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:mongodb": "node scripts/test-mongodb-connection.js",
+    "migrate:mongodb": "node scripts/migrate-to-mongodb.js"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
@@ -46,6 +48,8 @@
     "genkit": "^1.14.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.475.0",
+    "mongodb": "^7.1.0",
+    "mongoose": "^9.2.1",
     "next": "^15.5.12",
     "next-themes": "^0.3.0",
     "patch-package": "^8.0.0",

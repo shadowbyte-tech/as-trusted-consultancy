@@ -15,8 +15,19 @@ import {
   readContacts,
   writeContacts,
   readUsers,
-  writeUsers
-} from './database';
+  writeUsers,
+  createPlot as createPlotDB,
+  updatePlot as updatePlotDB,
+  deletePlot as deletePlotDB,
+  createUser as createUserDB,
+  deleteUser as deleteUserDB,
+  createInquiry as createInquiryDB,
+  createContact as createContactDB,
+  updateContact as updateContactDB,
+  deleteContact as deleteContactDB,
+  createRegistration as createRegistrationDB,
+  markRegistrationsAsRead as markRegistrationsAsReadDB
+} from './mongodb-database';
 import { VALIDATION, API_MESSAGES } from './constants';
 import { setPassword } from './password-storage';
 import bcrypt from 'bcryptjs';
@@ -202,8 +213,7 @@ export async function createPlot(prevState: State, formData: FormData): Promise<
       }
     }
 
-    const newPlot: Plot = {
-      id: Date.now().toString(),
+    const plotData = {
       ...validatedFields.data,
       imageUrl: imageUrl,
       imageHint: 'custom upload',
@@ -213,9 +223,7 @@ export async function createPlot(prevState: State, formData: FormData): Promise<
       status: status as any,
     };
 
-    const plots = await readPlots();
-    plots.push(newPlot);
-    await writePlots(plots);
+    const newPlot = await createPlotDB(plotData);
 
     revalidatePath('/dashboard');
     revalidatePath('/plots');
@@ -254,16 +262,15 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
       }
     }
 
-    const plots = await readPlots();
-    const plotIndex = plots.findIndex((p) => p.id === id);
-    if (plotIndex === -1) {
+    const existingPlot = await getPlotById(id);
+    if (!existingPlot) {
       return { message: API_MESSAGES.ERROR.PLOT_NOT_FOUND, success: false };
     }
     
     // Process price and calculate price per sqft
     const price = validatedFields.data.price ? parseFloat(validatedFields.data.price) : undefined;
     const priceNegotiable = validatedFields.data.priceNegotiable === 'true';
-    const status = validatedFields.data.status || plots[plotIndex].status || 'Available';
+    const status = validatedFields.data.status || existingPlot.status || 'Available';
     
     // Calculate price per sqft if price and size are available
     let pricePerSqft: number | undefined;
@@ -275,8 +282,7 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
       }
     }
     
-    const updatedPlot: Plot = { 
-      ...plots[plotIndex], 
+    const updateData: Partial<Plot> = { 
       ...validatedFields.data,
       price,
       pricePerSqft,
@@ -295,12 +301,11 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
           success: false,
         }
       }
-      updatedPlot.imageUrl = await fileToDataUrl(validatedImage.data);
-      updatedPlot.imageHint = 'custom upload';
+      updateData.imageUrl = await fileToDataUrl(validatedImage.data);
+      updateData.imageHint = 'custom upload';
     }
 
-    plots[plotIndex] = updatedPlot;
-    await writePlots(plots);
+    await updatePlotDB(id, updateData);
 
     revalidatePath('/dashboard');
     revalidatePath('/plots');
@@ -323,18 +328,14 @@ export async function updatePlot(id: string, prevState: State, formData: FormDat
 
 export async function deletePlot(id: string): Promise<{ success: boolean; message: string }> {
   try {
-    let plots = await readPlots();
-    const plotIndex = plots.findIndex((plot) => plot.id === id);
+    const deleted = await deletePlotDB(id);
     
-    if (plotIndex === -1) {
+    if (!deleted) {
       return {
         success: false,
         message: API_MESSAGES.ERROR.PLOT_NOT_FOUND
       };
     }
-
-    plots.splice(plotIndex, 1);
-    await writePlots(plots);
     
     revalidatePath('/dashboard');
     revalidatePath('/plots');
@@ -388,18 +389,16 @@ export async function createUser(prevState: State, formData: FormData): Promise<
       };
     }
 
-    const newUser: User = {
-      id: `u${Date.now()}`,
+    const userData = {
       email: email,
-      role: 'User',
+      role: 'User' as const,
     };
 
     // Hash and store password
     const hashedPassword = await bcrypt.hash(password, 10);
     await setPassword(email, hashedPassword);
 
-    users.push(newUser);
-    await writeUsers(users);
+    await createUserDB(userData);
     
     revalidatePath('/dashboard/users');
     redirect('/dashboard/users');
@@ -423,11 +422,7 @@ export async function deleteUser(id: string) {
       return;
     }
     
-    const userIndex = users.findIndex((user) => user.id === id);
-    if (userIndex > -1) {
-      users.splice(userIndex, 1);
-      await writeUsers(users);
-    }
+    await deleteUserDB(id);
     
     revalidatePath('/dashboard/users');
   } catch (error) {
@@ -505,15 +500,12 @@ export async function saveInquiry(formData: FormData): Promise<{ success: boolea
       return { success: false, message: API_MESSAGES.ERROR.INVALID_INPUT };
     }
 
-    const newInquiry: Inquiry = {
-      id: `inq-${Date.now()}`,
+    const inquiryData = {
       receivedAt: new Date().toISOString(),
       ...validatedFields.data,
     };
     
-    const inquiries = await readInquiries();
-    inquiries.push(newInquiry);
-    await writeInquiries(inquiries);
+    await createInquiryDB(inquiryData);
 
     revalidatePath('/dashboard/inquiries');
 
@@ -568,13 +560,7 @@ export async function createContact(prevState: State, formData: FormData): Promi
       }
     }
 
-    const newContact: Contact = {
-      id: `con-${Date.now()}`,
-      ...validatedFields.data,
-    };
-
-    contacts.push(newContact);
-    await writeContacts(contacts);
+    await createContactDB(validatedFields.data);
     
     revalidatePath('/dashboard/contacts');
     redirect('/dashboard/contacts');
@@ -614,14 +600,12 @@ export async function updateContact(id: string, prevState: State, formData: Form
       }
     }
 
-    const contactIndex = contacts.findIndex((c) => c.id === id);
-
-    if (contactIndex === -1) {
+    const contact = await getContactById(id);
+    if (!contact) {
       return { message: API_MESSAGES.ERROR.CONTACT_NOT_FOUND, success: false };
     }
     
-    contacts[contactIndex] = { id, ...validatedFields.data };
-    await writeContacts(contacts);
+    await updateContactDB(id, validatedFields.data);
     
     revalidatePath('/dashboard/contacts');
     redirect('/dashboard/contacts');
@@ -637,12 +621,7 @@ export async function updateContact(id: string, prevState: State, formData: Form
 
 export async function deleteContact(id: string) {
   try {
-    const contacts = await readContacts();
-    const contactIndex = contacts.findIndex((c) => c.id === id);
-    if (contactIndex > -1) {
-      contacts.splice(contactIndex, 1);
-      await writeContacts(contacts);
-    }
+    await deleteContactDB(id);
     revalidatePath('/dashboard/contacts');
   } catch (error) {
     console.error('Error deleting contact:', error);
@@ -692,15 +671,13 @@ export async function createRegistration(prevState: State, formData: FormData): 
       };
     }
 
-    const newRegistration: Registration = {
-      id: `reg-${Date.now()}`,
+    const registrationData = {
       createdAt: new Date().toISOString(),
       ...validatedFields.data,
       isNew: true,
     };
 
-    currentRegistrations.push(newRegistration);
-    await writeRegistrations(currentRegistrations);
+    const newRegistration = await createRegistrationDB(registrationData);
     revalidatePath('/dashboard/registrations');
     revalidatePath('/dashboard', 'layout');
 
@@ -720,18 +697,8 @@ export async function createRegistration(prevState: State, formData: FormData): 
 
 export async function markRegistrationsAsRead() {
   try {
-    const registrations = await readRegistrations();
-    const hasNewRegistrations = registrations.some(r => r.isNew);
-    
-    if (hasNewRegistrations) {
-      registrations.forEach(r => {
-        if (r.isNew) {
-          r.isNew = false;
-        }
-      });
-      await writeRegistrations(registrations);
-      revalidatePath('/dashboard', 'layout');
-    }
+    await markRegistrationsAsReadDB();
+    revalidatePath('/dashboard', 'layout');
   } catch (error) {
     console.error('Error marking registrations as read:', error);
   }

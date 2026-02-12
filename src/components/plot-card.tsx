@@ -25,9 +25,11 @@ export default function PlotCard({ plot }: PlotCardProps) {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <Badge variant="secondary" className="mb-2">{plot.plotFacing} Facing</Badge>
+          <div className="flex justify-between items-start mb-2">
+            <Badge variant="secondary">{plot.plotFacing} Facing</Badge>
+          </div>
           <CardTitle className="text-xl font-headline">Plot No: {plot.plotNumber}</CardTitle>
-          <div className="flex items-center text-muted-foreground mt-2">
+          <div className="flex items-center text-muted-foreground mt-2 mb-3">
             <MapPin className="h-4 w-4 mr-2" />
             <span>{plot.areaName}, {plot.villageName}</span>
           </div>

@@ -15,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { Textarea } from './ui/textarea';
-import { generatePlotDescription } from '@/ai/flows/generate-plot-description-flow';
 import { useRouter } from 'next/navigation';
 
 const plotFacings: PlotFacing[] = ['North', 'South', 'East', 'West', 'North-East', 'North-West', 'South-East', 'South-West'];
@@ -69,50 +68,11 @@ export default function PlotForm({ plot }: { plot?: Plot }) {
   }, [state, toast, router, plot]);
 
   const handleGenerateDescription = async (form: HTMLFormElement) => {
-    setIsGenerating(true);
-
-    const formData = new FormData(form);
-    const plotSize = formData.get('plotSize') as string;
-    const plotFacing = formData.get('plotFacing') as string;
-    const areaName = formData.get('areaName') as string;
-    const villageName = formData.get('villageName') as string;
-
-    if (!plotSize || !plotFacing || !areaName || !villageName) {
-        toast({
-            variant: 'destructive',
-            title: 'Missing Details',
-            description: 'Please fill in plot size, facing, area, and village name to generate a description.',
-        });
-        setIsGenerating(false);
-        return;
-    }
-
-    try {
-        const result = await generatePlotDescription({
-            plotSize,
-            plotFacing,
-            areaName,
-            villageName,
-        });
-        setDescription(result.description);
-        toast({
-            title: 'Description Generated',
-            description: 'The AI-powered description has been added below.',
-        })
-    } catch(e) {
-        console.error(e);
-        let errorMessage = 'Could not generate description. The AI model may have encountered an error.';
-        if (e instanceof Error && (e.message.includes('503') || e.message.includes('overloaded'))) {
-             errorMessage = 'Could not generate description because the AI model is busy. Please try again in a moment.';
-        }
-        toast({
-            variant: 'destructive',
-            title: 'Generation Failed',
-            description: errorMessage,
-        });
-    } finally {
-        setIsGenerating(false);
-    }
+    toast({
+        variant: 'destructive',
+        title: 'Feature Temporarily Disabled',
+        description: 'AI description generation is temporarily disabled. Please write your own description.',
+    });
   }
 
   return (
@@ -157,6 +117,48 @@ export default function PlotForm({ plot }: { plot?: Plot }) {
             {state.errors?.plotFacing && <p className="text-sm text-destructive">{state.errors.plotFacing[0]}</p>}
           </div>
 
+          {/* New Price and Status Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (₹)</Label>
+              <Input 
+                id="price" 
+                name="price" 
+                type="number" 
+                placeholder="e.g., 2500000" 
+                defaultValue={plot?.price?.toString() || ''} 
+              />
+              {state.errors?.price && <p className="text-sm text-destructive">{state.errors.price[0]}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Plot Status</Label>
+              <Select name="status" defaultValue={plot?.status || 'Available'}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Available">Available</SelectItem>
+                  <SelectItem value="Reserved">Reserved</SelectItem>
+                  <SelectItem value="Sold">Sold</SelectItem>
+                  <SelectItem value="Under Negotiation">Under Negotiation</SelectItem>
+                </SelectContent>
+              </Select>
+              {state.errors?.status && <p className="text-sm text-destructive">{state.errors.status[0]}</p>}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              id="priceNegotiable" 
+              name="priceNegotiable" 
+              value="true"
+              defaultChecked={plot?.priceNegotiable || false}
+              className="rounded border-gray-300"
+            />
+            <Label htmlFor="priceNegotiable" className="text-sm">Price is negotiable</Label>
+          </div>
+
           <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea 
@@ -172,13 +174,13 @@ export default function PlotForm({ plot }: { plot?: Plot }) {
                 variant="outline" 
                 size="sm" 
                 className="mt-2" 
-                disabled={isGenerating || !isApiKeyConfigured}
+                disabled={true}
                 onClick={(e) => handleGenerateDescription(e.currentTarget.form!)}
               >
-                  {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                  Generate with AI
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Generate with AI (Disabled)
               </Button>
-               {!isApiKeyConfigured && <p className="text-xs text-muted-foreground mt-1">AI generation is disabled. Configure a Gemini API key to enable it.</p>}
+               <p className="text-xs text-muted-foreground mt-1">AI generation is temporarily disabled for build stability.</p>
           </div>
 
           <div className="space-y-2">

@@ -122,7 +122,6 @@ const PlotSchema = z.object({
   description: z.string()
     .max(VALIDATION.DESCRIPTION_MAX_LENGTH, { message: `Description must be less than ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters.` })
     .optional(),
-  // New fields
   price: z.string().optional(),
   priceNegotiable: z.string().optional(),
   status: z.enum(['Available', 'Reserved', 'Sold', 'Under Negotiation']).optional(),

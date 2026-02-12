@@ -6,7 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Building, GraduationCap, Hospital, Loader2, Search, ShoppingCart, Sparkles } from 'lucide-react';
-import { getNearbyAmenities, type Amenities } from '@/ai/flows/get-nearby-amenities-flow';
+
+type Amenities = {
+  schools: string[];
+  hospitals: string[];
+  markets: string[];
+  transport: string[];
+};
 
 export default function NearbyAmenities({ plot }: { plot: Plot }) {
   const [amenities, setAmenities] = useState<Amenities | null>(null);
@@ -15,24 +21,7 @@ export default function NearbyAmenities({ plot }: { plot: Plot }) {
   const isApiKeyConfigured = process.env.NEXT_PUBLIC_GEMINI_API_KEY_CONFIGURED === 'true';
 
   const handleGenerate = async () => {
-    setIsLoading(true);
-    setError(null);
-    setAmenities(null);
-    try {
-      const result = await getNearbyAmenities({
-        location: `${plot.areaName}, ${plot.villageName}`,
-      });
-      setAmenities(result);
-    } catch (e) {
-      console.error(e);
-      let errorMessage = 'Failed to find amenities. The model may have encountered an error. Please try again later.';
-       if (e instanceof Error && (e.message.includes('503') || e.message.includes('overloaded'))) {
-           errorMessage = 'The AI model is currently busy. Please wait a moment and try again.'
-       }
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    setError('AI features are temporarily disabled for build stability. They will be re-enabled in a future update.');
   };
   
   const amenityIcons = {

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { generateSitePlan } from '@/ai/flows/generate-site-plan-flow';
 import type { Plot } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,26 +16,7 @@ export default function SitePlanGenerator({ plot }: { plot: Plot }) {
   const isApiKeyConfigured = process.env.NEXT_PUBLIC_GEMINI_API_KEY_CONFIGURED === 'true';
 
   const handleGenerate = async () => {
-    setIsLoading(true);
-    setError(null);
-    setSitePlanUrl(null);
-    try {
-      const result = await generateSitePlan({
-        plotSize: plot.plotSize,
-        plotFacing: plot.plotFacing,
-        areaName: plot.areaName,
-      });
-      setSitePlanUrl(result.imageUrl);
-    } catch (e) {
-      console.error(e);
-      let errorMessage = 'Failed to generate site plan. The model may have encountered an error. Please try again later.';
-       if (e instanceof Error && (e.message.includes('503') || e.message.includes('overloaded'))) {
-           errorMessage = 'The AI model is currently busy. Please wait a moment and try again.'
-       }
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    setError('AI features are temporarily disabled for build stability. They will be re-enabled in a future update.');
   };
 
   return (

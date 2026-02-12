@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { FileUp, Pencil, Home, Users, MoreVertical, MapPin, Square } from 'lucide-react';
+import { FileUp, Pencil, Home, Users, MoreVertical, MapPin, Square, Eye } from 'lucide-react';
 import type { Plot, PlotFacing } from '@/lib/definitions';
 import DeletePlotButton from '@/components/delete-plot-button';
 import Image from 'next/image';
@@ -57,12 +57,20 @@ export default async function DashboardPage() {
             Welcome back, here's an overview of your listings.
             </p>
         </div>
-         <Button asChild className="hidden sm:inline-flex">
+        <div className="flex gap-2">
+          <Button asChild variant="outline" className="hidden sm:inline-flex">
+            <Link href="/plots">
+              <Eye className="mr-2 h-4 w-4" />
+              View as User
+            </Link>
+          </Button>
+          <Button asChild className="hidden sm:inline-flex">
             <Link href="/upload">
               <FileUp className="mr-2 h-4 w-4" />
               Upload New Plot
             </Link>
           </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

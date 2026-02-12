@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { analyzeVastu, type AnalyzeVastuOutput } from '@/ai/flows/analyze-vastu-flow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Plot } from '@/lib/definitions';
 import { CheckCircle2, Shield, ThumbsDown, ThumbsUp, XCircle, AlertTriangle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+type AnalyzeVastuOutput = {
+  vastuRating: 'Excellent' | 'Good' | 'Average' | 'Poor';
+  analysisSummary: string;
+  positivePoints: string[];
+  negativePoints: string[];
+};
 
 const ratingConfig = {
     Excellent: { icon: ThumbsUp, color: 'text-green-600', bgColor: 'bg-green-100' },
@@ -20,35 +26,9 @@ export default function VastuAnalysis({ plot }: { plot: Plot }) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const getAnalysis = async () => {
-            if (process.env.NEXT_PUBLIC_GEMINI_API_KEY_CONFIGURED !== 'true') {
-                setError('The Vastu analysis could not be loaded because the Gemini API key is not configured.');
-                setIsLoading(false);
-                return;
-            }
-
-            setIsLoading(true);
-            setError(null);
-            try {
-                const result = await analyzeVastu({
-                    plotFacing: plot.plotFacing,
-                    plotSize: plot.plotSize,
-                    areaName: plot.areaName
-                });
-                setAnalysis(result);
-            } catch (e) {
-                console.error(e);
-                 let errorMessage = 'An unexpected error occurred while fetching the Vastu analysis.';
-                if (e instanceof Error && (e.message.includes('503') || e.message.includes('overloaded'))) {
-                    errorMessage = 'The Vastu analysis could not be loaded because the AI model is currently busy. Please check back in a moment.'
-                }
-                setError(errorMessage);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        getAnalysis();
+        // AI features temporarily disabled
+        setError('AI features are temporarily disabled for build stability. They will be re-enabled in a future update.');
+        setIsLoading(false);
     }, [plot]);
 
     if (isLoading) {

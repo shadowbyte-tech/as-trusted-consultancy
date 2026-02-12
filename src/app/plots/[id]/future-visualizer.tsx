@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { visualizeFutureDevelopment } from '@/ai/flows/visualize-future-development-flow';
 import type { Plot } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,41 +16,7 @@ export default function FutureVisualizer({ plot }: { plot: Plot }) {
   const isApiKeyConfigured = process.env.NEXT_PUBLIC_GEMINI_API_KEY_CONFIGURED === 'true';
 
   const handleGenerate = async () => {
-    setIsLoading(true);
-    setError(null);
-    setFutureImageUrl(null);
-    try {
-      // Fetch the image and convert to a Data URL
-      const response = await fetch(plot.imageUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-      const blob = await response.blob();
-
-      const reader = new FileReader();
-      const dataUrlPromise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      const currentImageUrlDataUri = await dataUrlPromise;
-
-      const result = await visualizeFutureDevelopment({
-        currentImageUrl: currentImageUrlDataUri,
-        areaName: plot.areaName,
-      });
- setFutureImageUrl(result.futureImageUrl);
-    } catch (e) {
-      console.error(e);
-      let errorMessage = 'Failed to generate future view. The model may have encountered an error. Please try again later.';
-       if (e instanceof Error && (e.message.includes('503') || e.message.includes('overloaded'))) {
-           errorMessage = 'The AI model is currently busy. Please wait a moment and try again.'
-       }
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    setError('AI features are temporarily disabled for build stability. They will be re-enabled in a future update.');
   };
 
   return (

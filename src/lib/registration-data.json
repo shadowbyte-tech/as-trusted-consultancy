@@ -6,7 +6,7 @@
     "email": "arjun.m@example.com",
     "createdAt": "2026-02-02T14:32:40.154Z",
     "notes": "Interested in investment properties.",
-    "isNew": true
+    "isNew": false
   },
   {
     "id": "reg-2",
@@ -15,7 +15,7 @@
     "email": "sneha.p@example.com",
     "createdAt": "2026-02-03T14:32:40.154Z",
     "notes": "First-time home buyer, needs guidance on the process.",
-    "isNew": true
+    "isNew": false
   },
   {
     "id": "reg-1770215645865",
@@ -24,7 +24,7 @@
     "phone": "08008990902",
     "email": "sukkamanikantagoud@gmail.com",
     "notes": "",
-    "isNew": true
+    "isNew": false
   },
   {
     "id": "reg-1770215967002",
@@ -33,6 +33,15 @@
     "phone": "09666116088",
     "email": "sukkamanikantagoud66@gmail.com",
     "notes": "",
-    "isNew": true
+    "isNew": false
+  },
+  {
+    "id": "reg-1770896333819",
+    "createdAt": "2026-02-12T11:38:53.819Z",
+    "name": "Sukka Manikantagoud",
+    "phone": "09666116088",
+    "email": "bytes963@gmail.com",
+    "notes": "",
+    "isNew": false
   }
 ]

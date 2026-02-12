@@ -130,7 +130,7 @@ export default async function PlotDetailPage({ params }: { params: Promise<{ id:
             <CardHeader>
               <div className="flex justify-between items-start">
                   <div>
-                    <Badge variant="secondary">For Sale</Badge>
+                    <Badge variant="secondary" className="mb-2">For Sale</Badge>
                     <CardTitle className="mt-2 text-3xl font-bold font-headline">
                       Plot Details
                     </CardTitle>

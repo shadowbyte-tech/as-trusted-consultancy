@@ -1,5 +1,6 @@
 export function ASLogo({ className }: { className?: string }) {
-  const gradientId = `gold-gradient-${Math.random().toString(36).substr(2, 9)}`;
+  // Use a fixed ID to avoid hydration mismatch
+  const gradientId = 'as-logo-gradient';
   
   return (
     <svg

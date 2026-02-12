@@ -34,6 +34,8 @@ export const PLOT_STATUS = [
   'Under Negotiation',
 ] as const;
 
+
+
 // Validation constants
 export const VALIDATION = {
   PASSWORD_MIN_LENGTH: 8,

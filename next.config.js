@@ -26,6 +26,17 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Exclude problematic AI modules during build
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@genkit-ai/core': 'commonjs @genkit-ai/core',
+        'genkit': 'commonjs genkit',
+      });
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
